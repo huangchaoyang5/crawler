@@ -1,5 +1,5 @@
 # crawler
-> record for this small functionality using python, ocr(only verify for digit number) and selenium. OS system is ubuntu18.04
+> record for this small functionality using python, ocr(only verify for digit number) and selenium. OS system is ubuntu18.04 and anconda env
 
 ## contents
 * [Installation](#Installation)
@@ -31,7 +31,7 @@ options.add_argument('--headless')
 options.add_argument('--disable-gpu')
 options.add_argument('--no-sandbox') #for linux avoid chrome not started
 options.add_experimental_option("excludeSwitches", ['enable-automation'])
-options.add_argument('--user-agent="Mozilla/5.0 (Windows Phone 10.0; Android 4.2.1; Microsoft; Lumia 640 XL LTE) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Mobile Safari/537.36 Edge/12.10166"')
+options.add_experimental_option('useAutomationExtension', False)  #avoid Cloudflare to restrict access
 driver = webdriver.Chrome(options=options)
 driver.get("your url")
 time.sleep(1)
@@ -44,4 +44,25 @@ When you run python `hct_information.py`, the  __pycache__ and screenshot.png ar
 During the testing you might meet unkill process the links might helpful.
 * [Killing a Zombie-Process](https://vitux.com/how-to-kill-zombie-processes-in-ubuntu-18-04/)
 * [stop accumulated Google Chrome background processes](https://askubuntu.com/questions/27604/how-can-i-stop-accumulated-google-chrome-background-processes)
-* [netstat -ltup - find current listing port](https://www.tecmint.com/find-listening-ports-linux/)
+* [netstat -tulpn - find current listing port](https://www.tecmint.com/find-listening-ports-linux/)
+
+## Server Setting
+
+I want to buld a service fot this api, therefore I am using Gunicorn and Nginx for my Flask app. references link as following
+* [link1(chinese)](https://peterli.website/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8nginx-gunicorn%E8%88%87supervisor-%E9%83%A8%E7%BD%B2%E4%B8%80%E5%80%8Bflask-app/)
+* [link2(chinese)](https://www.howtoing.com/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-18-04)
+* [link3](https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-18-04)
+
+Basically, I need to create a file call XXX.service(in my case is crawler.service) under /etc/systemd/system/ with associated paths which is the locations for bin directories and home directory. `sudo systemctl start crawler` `sudo systemctl enable crawler` `sudo systemctl status crawler` last comman is check the status for this service. The crawler.sock file should be created in the home directory which you type in the crawler.service
+
+Next I use Nginx as a proxy service. Since I want to use different port as a new service, I would like to create a new file for example crawler under /etc/nginx/sites-available/ 
+we need to add proxy_pass from our .sock file like this `proxy_pass http://unix:/home/XXX/XXX/crawler.sock;` to map the request.
+To enable the Nginx server block configuration you’ve just created, link the file to the sites-enabled directory:
+`sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled`
+With the file in that directory, you can test for syntax errors:
+`sudo nginx -t`
+If this returns without indicating any issues, restart the Nginx process to read the new configuration:
+`sudo systemctl restart nginx`
+
+
+
