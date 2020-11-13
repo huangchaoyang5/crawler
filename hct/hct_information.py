@@ -8,22 +8,40 @@ import pytesseract
 import json
 import sys
 
+def testDriver(url):
+    options = Options()
+    options.binary_location = '/usr/bin/google-chrome'
+    options.add_argument('--headless')
+    options.add_argument("start-maximized")
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox') #for linux avoid chrome not started
+    options.add_experimental_option('useAutomationExtension', False)
+    options.add_experimental_option("excludeSwitches", ['enable-automation'])
+    #options.add_argument('--user-agent="Mozilla/5.0 (Windows Phone 10.0; Android 4.2.1; Microsoft; Lumia 640 XL LTE) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Mobile Safari/537.36 Edge/12.10166"')
+    #options.add_argument('window-size=500*250')
+    driver = webdriver.Chrome(executable_path=('/usr/bin/chromedriver'), options=options)
+    driver.get(url)
+    time.sleep(1)
+
+    title = driver.title
+    driver.close()
+    return title
 
 def decryptRepacha(driver):
     img_src = driver.find_element_by_xpath("//img[@name='imgCode']").screenshot_as_png
     #img_src = driver.find_element_by_tag_name("img").screenshot_as_png
     # save Captcha
-    file_img = open("./hct/screenshot.png", "bw+")
+    file_img = open("screenshot.png", "bw+")
     file_img.write(img_src)
     file_img.close()
 
     # get rid of noise
-    img = cv2.imread('./hct/screenshot.png')
+    img = cv2.imread('screenshot.png')
     img = img[1:30, 1:80]
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img_gray = cv2.medianBlur(img_gray, 5)
     ret, img_binary = cv2.threshold(img_gray, 55, 255, cv2.THRESH_BINARY_INV)
-    #cv2.imwrite('img_code.bmp', img_binary) #saved file for check image
+    cv2.imwrite('img_code.bmp', img_binary) #saved file for check image
     
     # recognize
     #user_tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
@@ -44,6 +62,8 @@ def textTag(num):
 def crawler(orderNo):
 
     result = ''
+    if str(orderNo) == '':
+        return result
 
     #initializeing
     options = Options()
@@ -51,9 +71,12 @@ def crawler(orderNo):
     options.add_argument('--headless')
     options.add_argument('--disable-gpu')
     options.add_argument('--no-sandbox') #for linux avoid chrome not started
+    options.add_argument("start-maximized")
     options.add_experimental_option("excludeSwitches", ['enable-automation'])
-    options.add_argument('--user-agent="Mozilla/5.0 (Windows Phone 10.0; Android 4.2.1; Microsoft; Lumia 640 XL LTE) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Mobile Safari/537.36 Edge/12.10166"')
-    driver = webdriver.Chrome(options=options)
+    options.add_experimental_option('useAutomationExtension', False)
+    #options.add_argument('--user-agent="Mozilla/5.0 (Windows Phone 10.0; Android 4.2.1; Microsoft; Lumia 640 XL LTE) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Mobile Safari/537.36 Edge/12.10166"')
+    #options.add_argument('window-size=500*250')
+    driver = webdriver.Chrome(executable_path=('/usr/bin/chromedriver'), options=options)
     driver.get("https://www.hct.com.tw/Search/SearchGoods_n.aspx")
     time.sleep(1)
 
@@ -72,10 +95,10 @@ def crawler(orderNo):
             code = decryptRepacha(driver)
             repechaInput.send_keys(code)
             submit.click()
-            time.sleep(1)
 
             try:
-
+                
+                time.sleep(1)
                 invoiceNo = driver.find_element_by_id('ctl00_ContentFrame_lblInvoiceNo')
                 print(invoiceNo.text)
 
