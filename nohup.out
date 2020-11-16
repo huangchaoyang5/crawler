@@ -1,9 +1,0 @@
-[2020-11-13 11:24:41 +0800] [30375] [INFO] Starting gunicorn 20.0.4
-[2020-11-13 11:24:41 +0800] [30375] [INFO] Listening at: http://0.0.0.0:8788 (30375)
-[2020-11-13 11:24:41 +0800] [30375] [INFO] Using worker: sync
-[2020-11-13 11:24:41 +0800] [30376] [INFO] Booting worker with pid: 30376
-[2020-11-13 11:25:24 +0800] [30375] [CRITICAL] WORKER TIMEOUT (pid:30376)
-[2020-11-13 11:25:24 +0800] [30376] [INFO] Worker exiting (pid: 30376)
-repacha: 4670
-123
-[2020-11-13 11:25:24 +0800] [30474] [INFO] Booting worker with pid: 30474

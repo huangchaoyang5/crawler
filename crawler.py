@@ -11,7 +11,7 @@ def hello():
 
 @app.route("/test")
 def test():
-    return hct.testDriver('https://gitbook.tw/chapters/using-git/ignore.html')
+    return hct.testDriver('https://www.google.com/')
 
 @app.route("/hct_com/<deliveryNo>")
 def get_hct_delivery(deliveryNo):

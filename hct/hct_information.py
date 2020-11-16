@@ -25,6 +25,7 @@ def testDriver(url):
 
     title = driver.title
     driver.close()
+    driver.quit()
     return title
 
 def decryptRepacha(driver):
