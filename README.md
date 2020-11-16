@@ -4,7 +4,7 @@
 ## contents
 * [Installation](#Installation)
 * [Coding](#Coding)
-* [Server Setting](#Server Setting)
+* [Service](#Service)
 
 
 ## Installation
@@ -46,23 +46,34 @@ During the testing you might meet unkill process the links might helpful.
 * [stop accumulated Google Chrome background processes](https://askubuntu.com/questions/27604/how-can-i-stop-accumulated-google-chrome-background-processes)
 * [netstat -tulpn - find current listing port](https://www.tecmint.com/find-listening-ports-linux/)
 
-## Server Setting
+## Server
 
 I want to buld a service fot this api, therefore I am using Gunicorn and Nginx for my Flask app. references link as following
 * [link1(chinese)](https://peterli.website/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8nginx-gunicorn%E8%88%87supervisor-%E9%83%A8%E7%BD%B2%E4%B8%80%E5%80%8Bflask-app/)
 * [link2(chinese)](https://www.howtoing.com/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-18-04)
 * [link3](https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-18-04)
 
-Basically, I need to create a file call XXX.service(in my case is crawler.service) under /etc/systemd/system/ with associated paths which is the locations for bin directories and home directory. `sudo systemctl start crawler` `sudo systemctl enable crawler` `sudo systemctl status crawler` last comman is check the status for this service. The crawler.sock file should be created in the home directory which you type in the crawler.service
+for some reason, using above method will case a issue i have to figure out. When I test the selenium with different urls, some urls are working perfect like running flask default setting. But some are not like `https://www.google.com/`. It will cause 500 Internal error. If I check gunicorn server with the command `sudo systemctl status crawler`, the server wich I name crawler shows error for driver.get with unexcept error. I wonder if it is somthing to do with unix server with .sock file cause the problem.
 
-Next I use Nginx as a proxy service. Since I want to use different port as a new service, I would like to create a new file for example crawler under /etc/nginx/sites-available/ 
-we need to add proxy_pass from our .sock file like this `proxy_pass http://unix:/home/XXX/XXX/crawler.sock;` to map the request.
-To enable the Nginx server block configuration you’ve just created, link the file to the sites-enabled directory:
-`sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled`
-With the file in that directory, you can test for syntax errors:
-`sudo nginx -t`
-If this returns without indicating any issues, restart the Nginx process to read the new configuration:
-`sudo systemctl restart nginx`
+So I use my second option. So I am using supervisor instruction [link(chinese)](https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/710461/) to run specific port instead to create a sock file as a service. Fortunately, it work this time. Setting is in supervisord.conf file. The last step is to map ip and port inside nginx. There are serveral way can handle. I create a file with this path `sudo vim /etc/nginx/sites-available/crawler`
 
+```sh
+server {
+    listen 8788;
+    server_name localhost;
+    charset utf-8;
 
-
+    location / {
+        proxy_set_header X-Forward-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        #proxy_redirect off;
+        proxy_pass http://127.0.0.1:9200;
+        #proxy_connect_timeout 500s;
+        #proxy_read_timeout 500s;
+        #proxy_send_timeout 500s;
+        #include proxy_params;
+        #proxy_pass http://unix:/run/crawler.sock;
+    }
+}
+```
+Then just restart the nginx. Everything will be alright!!
